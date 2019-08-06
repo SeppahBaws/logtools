@@ -1,3 +1,10 @@
+# Editor
+.vscode/
+.vs/
+
+# Output
+bin/
+
 # Prerequisites
 *.d
 
