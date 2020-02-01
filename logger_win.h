@@ -4,6 +4,9 @@
 #include <string>
 #include <iostream>
 
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
 enum LogLevel
 {
     Info = 0x1,
@@ -14,6 +17,11 @@ enum LogLevel
 class Logger
 {
 public:
+    static void Init()
+    {
+        hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    }
+
     static void Log(LogLevel level, const std::string& msg)
     {
         switch (level)
@@ -31,21 +39,27 @@ public:
             break;
         }
 
-        std::cout << RESET;
+        SetConsoleTextAttribute(hConsole, RESET);
     }
 
     static void LogInfo(const std::string& msg)
     {
-        std::cout << WHITE << "[INFO] " << msg << std::endl;
+        SetConsoleTextAttribute(hConsole, RESET);
+        std::cout << "[INFO] " << msg << std::endl;
     }
 
     static void LogWarning(const std::string& msg)
     {
-        std::cout << YELLOW << "[WARNING] " << msg << std::endl;
+        SetConsoleTextAttribute(hConsole, YELLOW);
+        std::cout << "[WARNING] " << msg << std::endl;
     }
 
     static void LogError(const std::string& msg)
     {
-        std::cout << RED << "[ERROR] " << msg << std::endl;
+        SetConsoleTextAttribute(hConsole, RED);
+        std::cout << "[ERROR] " << msg << std::endl;
     }
+
+private:
+    HANDLE hConsole;
 };
