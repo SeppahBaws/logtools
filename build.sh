@@ -5,6 +5,10 @@
 mkdir -p ./bin
 
 # Compile
-g++ -o ./bin/program.o main.cpp
+g++ -std=c++17 ./logtools/src/main.cpp -o ./bin/program.o
 
 # Run if requested
+if echo $* | grep -e "--run" -q
+then
+	./bin/program.o
+fi
