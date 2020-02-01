@@ -1,4 +1,6 @@
 #pragma once
+#if defined(__linux__)
+
 #include "logcolors.h"
 
 #include <string>
@@ -14,7 +16,9 @@ enum LogLevel
 class Logger
 {
 public:
-	static void Init() {}
+	static void Init()
+	{
+	}
 
 	static void Log(LogLevel level, const std::string& msg)
 	{
@@ -23,31 +27,47 @@ public:
 		case LogLevel::Info:
 			LogInfo(msg);
 			break;
-
 		case LogLevel::Warning:
 			LogWarning(msg);
 			break;
-
 		case LogLevel::Error:
 			LogError(msg);
 			break;
 		}
-
-		std::cout << RESET;
 	}
 
 	static void LogInfo(const std::string& msg)
 	{
-		std::cout << WHITE << "[INFO] " << msg << std::endl;
+		LogColor("[INFO] " + msg, WHITE);
 	}
 
 	static void LogWarning(const std::string& msg)
 	{
-		std::cout << YELLOW << "[WARNING] " << msg << std::endl;
+		LogColor("[WARNING] " + msg, YELLOW);
 	}
 
 	static void LogError(const std::string& msg)
 	{
-		std::cout << RED << "[ERROR] " << msg << std::endl;
+		LogColor("[ERROR] " + msg, RED);
+	}
+
+private:
+	// Linux specific
+	static void ResetConsoleColors()
+	{
+		std::cout << RESET;
+	}
+	static void LogColor(const std::string& msg, const std::string& color)
+	{
+		std::cout << color << msg << std::endl;
+		ResetConsoleColors();
+	}
+
+	static Logger Instance()
+	{
+		static Logger logger{};
+		return logger;
 	}
 };
+
+#endif
