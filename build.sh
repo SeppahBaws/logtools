@@ -1,14 +1,11 @@
 # To build: simply call ./build.sh
-# To also run when build completed pass the flag `-r` or `--run`
-
-# Make build folder
-mkdir -p ./bin
+# To also run when build completed pass the flag `-r`
 
 # Compile
-g++ -std=c++17 ./logtools/src/main.cpp -o ./bin/program.o
+make
 
 # Run if requested
-if echo $* | grep -e "--run" -q
+if echo $* | grep -e "-r" -q
 then
-	./bin/program.o
+	./bin/Debug-x86_64-linux/logtools
 fi

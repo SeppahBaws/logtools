@@ -160,7 +160,7 @@ private:
 	{
 		SetConsoleTextAttribute(Instance().hConsole, RESET);
 	}
-	static void LogColor(const std::string& msg, const int color)
+	static void LogColor(const std::string& msg, const WORD color)
 	{
 		SetConsoleTextAttribute(Instance().hConsole, color);
 		std::cout << msg << std::endl;
@@ -180,4 +180,4 @@ private:
 #endif
 };
 
-#endif INCLUDE_LOGTOOLS_H
+#endif //INCLUDE_LOGTOOLS_H

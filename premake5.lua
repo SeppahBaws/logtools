@@ -16,7 +16,9 @@ project "logtools"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
-    
+
+    warnings "extra"
+
     targetdir ("bin/" .. outputdir)
     objdir ("bin-int/" .. outputdir)
 
@@ -24,6 +26,11 @@ project "logtools"
     {
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp"
+    }
+
+    flags
+    {
+        "FatalWarnings"
     }
 
     filter "configurations:Debug"

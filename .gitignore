@@ -4,6 +4,7 @@
 *.sln
 *.vcxproj
 *.vcxproj.*
+Makefile
 
 # Output
 bin/
