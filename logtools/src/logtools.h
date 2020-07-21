@@ -49,13 +49,22 @@
 #ifndef INCLUDE_LOGTOOLS_H
 #define INCLUDE_LOGTOOLS_H
 
+// Platform definitions
+#if defined(__linux__)
+#define LOGTOOLS_LINUX
+#elif defined(_WIN32) | defined(_WIN64)
+#define LOGTOOLS_WINDOWS
+#else
+#error Unsupported platform! Logtools only works on Linux or Windows.
+#endif
+
 // Check if C++17 or greater, by checking if we have a C++17 specific feature.
 #if __cpp_inline_variables < 201606
 #error Incorrect C++ version. Logtools requires C++ version 17 or greater.
 #endif
 
 ////////////////// Colors //////////////////
-#if defined(__linux__)
+#if defined(LOGTOOLS_LINUX)
 // Linux Colors
 
 #define BLACK      "\033[30m"
@@ -69,7 +78,7 @@
 
 #define RESET      "\033[0m"
 
-#elif defined(_WIN32) || defined(_WIN64)
+#elif defined(LOGTOOLS_WINDOWS)
 // Windows Colors
 
 #define WIN32_LEAN_AND_MEAN
@@ -91,6 +100,8 @@
 //////////////// Main Logger ////////////////
 #include <string>
 #include <iostream>
+#include <cstdio>
+#include <cstdarg>
 
 enum LogLevel
 {
@@ -104,7 +115,7 @@ class Logger
 public:
 	static void Init()
 	{
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(LOGTOOLS_WINDOWS)
 		hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
 	}
@@ -142,29 +153,74 @@ public:
 		LogColor("[ERROR] " + msg, RED);
 	}
 
+	static void LogInfo(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		SetConsoleColor(WHITE);
+		std::cout << "[INFO] ";
+		std::vprintf(fmt, args);
+		std::cout << std::endl;
+		ResetConsoleColor();
+		va_end(args);
+	}
+
+	static void LogWarning(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		SetConsoleColor(YELLOW);
+		std::cout << "[WARNING] ";
+		std::vprintf(fmt, args);
+		std::cout << std::endl;
+		ResetConsoleColor();
+		va_end(args);
+	}
+
+	static void LogError(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		SetConsoleColor(RED);
+		std::cout << "[ERROR] ";
+		std::vprintf(fmt, args);
+		std::cout << std::endl;
+		ResetConsoleColor();
+		va_end(args);
+	}
+
 private:
-#if defined(__linux__)
+#if defined(LOGTOOLS_LINUX)
 	// Linux specific
-	static void ResetConsoleColors()
+	static void SetConsoleColor(const std::string& color)
+	{
+		std::cout << color;
+	}
+	static void ResetConsoleColor()
 	{
 		std::cout << RESET;
 	}
 	static void LogColor(const std::string& msg, const std::string& color)
 	{
-		std::cout << color << msg << std::endl;
-		ResetConsoleColors();
+		SetConsoleColor(color);
+		std::cout << msg << std::endl;
+		ResetConsoleColor();
 	}
-#elif defined(_WIN32) || defined(_WIN64)
+#elif defined(LOGTOOLS_WINDOWS)
 	// Windows specific
-	static void ResetConsoleColors()
+	static void SetConsoleColor(const WORD color)
+	{
+		SetConsoleTextAttribute(Instance().hConsole, color);
+	}
+	static void ResetConsoleColor()
 	{
 		SetConsoleTextAttribute(Instance().hConsole, RESET);
 	}
 	static void LogColor(const std::string& msg, const WORD color)
 	{
-		SetConsoleTextAttribute(Instance().hConsole, color);
+		SetConsoleColor(color);
 		std::cout << msg << std::endl;
-		ResetConsoleColors();
+		ResetConsoleColor();
 	}
 #endif
 
@@ -175,7 +231,7 @@ private:
 	}
 
 private:
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(LOGTOOLS_WINDOWS)
 	inline static HANDLE hConsole;
 #endif
 };
