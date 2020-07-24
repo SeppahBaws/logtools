@@ -103,13 +103,23 @@
 #include <cstdio>
 #include <cstdarg>
 
-enum LogLevel
+enum class LogLevel
 {
-	Trace = 0x0,
-	Debug = 0x1,
-	Info = 0x2,
-	Warning = 0x4,
-	Error = 8
+	Trace = 0,
+	Debug = 1,
+	Info = 2,
+	Warning = 3,
+	Error = 4
+};
+
+struct LogBinding
+{
+	const char* identifier;
+#if defined(LOGTOOLS_LINUX)
+	const char* color;
+#elif defined(LOGTOOLS_WINDOWS)
+	WORD color;
+#endif
 };
 
 class Logger
@@ -122,55 +132,29 @@ public:
 #endif
 	}
 
-	static void Log(LogLevel level, const std::string& msg)
-	{
-		switch (level)
-		{
-		case LogLevel::Trace:
-			LogTrace(msg);
-			break;
-
-		case LogLevel::Debug:
-			LogDebug(msg);
-			break;
-
-		case LogLevel::Info:
-			LogInfo(msg);
-			break;
-
-		case LogLevel::Warning:
-			LogWarning(msg);
-			break;
-
-		case LogLevel::Error:
-			LogError(msg);
-			break;
-		}
-	}
-
 	static void LogTrace(const std::string& msg)
 	{
-		LogColor("[TRACE] " + msg, RESET);
+		Log(LogLevel::Trace, msg);
 	}
 
 	static void LogDebug(const std::string& msg)
 	{
-		LogColor("[DEBUG] " + msg, CYAN);
+		Log(LogLevel::Debug, msg);
 	}
 
 	static void LogInfo(const std::string& msg)
 	{
-		LogColor("[INFO] " + msg, WHITE);
+		Log(LogLevel::Info, msg);
 	}
 
 	static void LogWarning(const std::string& msg)
 	{
-		LogColor("[WARNING] " + msg, YELLOW);
+		Log(LogLevel::Warning, msg);
 	}
 
 	static void LogError(const std::string& msg)
 	{
-		LogColor("[ERROR] " + msg, RED);
+		Log(LogLevel::Error, msg);
 	}
 
 
@@ -178,11 +162,7 @@ public:
 	{
 		va_list args;
 		va_start(args, fmt);
-		SetConsoleColor(RESET);
-		std::cout << "[TRACE] ";
-		std::vprintf(fmt, args);
-		std::cout << std::endl;
-		ResetConsoleColor();
+		Log(LogLevel::Trace, fmt, args);
 		va_end(args);
 	}
 
@@ -190,11 +170,7 @@ public:
 	{
 		va_list args;
 		va_start(args, fmt);
-		SetConsoleColor(CYAN);
-		std::cout << "[DEBUG] ";
-		std::vprintf(fmt, args);
-		std::cout << std::endl;
-		ResetConsoleColor();
+		Log(LogLevel::Debug, fmt, args);
 		va_end(args);
 	}
 
@@ -202,11 +178,7 @@ public:
 	{
 		va_list args;
 		va_start(args, fmt);
-		SetConsoleColor(WHITE);
-		std::cout << "[INFO] ";
-		std::vprintf(fmt, args);
-		std::cout << std::endl;
-		ResetConsoleColor();
+		Log(LogLevel::Info, fmt, args);
 		va_end(args);
 	}
 
@@ -214,11 +186,7 @@ public:
 	{
 		va_list args;
 		va_start(args, fmt);
-		SetConsoleColor(YELLOW);
-		std::cout << "[WARNING] ";
-		std::vprintf(fmt, args);
-		std::cout << std::endl;
-		ResetConsoleColor();
+		Log(LogLevel::Warning, fmt, args);
 		va_end(args);
 	}
 
@@ -226,12 +194,26 @@ public:
 	{
 		va_list args;
 		va_start(args, fmt);
-		SetConsoleColor(RED);
-		std::cout << "[ERROR] ";
+		Log(LogLevel::Error, fmt, args);
+		va_end(args);
+	}
+
+private:
+	static void Log(LogLevel level, const std::string& msg)
+	{
+		SetConsoleColor(m_Bindings[static_cast<int>(level)].color);
+		std::cout << "[" << m_Bindings[static_cast<int>(level)].identifier << "] ";
+		std::cout << msg << std::endl;
+		ResetConsoleColor();
+	}
+
+	static void Log(LogLevel level, const char* fmt, va_list args)
+	{
+		SetConsoleColor(m_Bindings[static_cast<int>(level)].color);
+		std::cout << "[" << m_Bindings[static_cast<int>(level)].identifier << "] ";
 		std::vprintf(fmt, args);
 		std::cout << std::endl;
 		ResetConsoleColor();
-		va_end(args);
 	}
 
 private:
@@ -279,6 +261,14 @@ private:
 #if defined(LOGTOOLS_WINDOWS)
 	inline static HANDLE hConsole;
 #endif
+
+	inline const static LogBinding m_Bindings[] = {
+		{ "TRACE", RESET },
+		{ "DEBUG", CYAN },
+		{ "INFO", WHITE },
+		{ "WARNING", YELLOW },
+		{ "ERROR", RED }
+	};
 };
 
 #endif //INCLUDE_LOGTOOLS_H

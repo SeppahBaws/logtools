@@ -4,13 +4,14 @@ int main()
 {
 	Logger::Init(); // Very important!
 
+	// Normal log functions
 	Logger::LogTrace("Some kind of trace message here...");
 	Logger::LogDebug("This is a debug message!");
 	Logger::LogInfo("Hello info");
 	Logger::LogWarning("This is a warning");
 	Logger::LogError("Failed to do something important!");
-	Logger::Log(LogLevel::Info, "Greetings!");
 
+	// Format log functions
 	Logger::LogTrace("Hello %x %X", 123, 456);
 	Logger::LogDebug("Debug with %s", "argument");
 	Logger::LogInfo("Hello %d", 1);
