@@ -105,9 +105,11 @@
 
 enum LogLevel
 {
-	Info = 0x1,
-	Warning = 0x2,
-	Error = 0x4
+	Trace = 0x0,
+	Debug = 0x1,
+	Info = 0x2,
+	Warning = 0x4,
+	Error = 8
 };
 
 class Logger
@@ -124,6 +126,14 @@ public:
 	{
 		switch (level)
 		{
+		case LogLevel::Trace:
+			LogTrace(msg);
+			break;
+
+		case LogLevel::Debug:
+			LogDebug(msg);
+			break;
+
 		case LogLevel::Info:
 			LogInfo(msg);
 			break;
@@ -136,6 +146,16 @@ public:
 			LogError(msg);
 			break;
 		}
+	}
+
+	static void LogTrace(const std::string& msg)
+	{
+		LogColor("[TRACE] " + msg, RESET);
+	}
+
+	static void LogDebug(const std::string& msg)
+	{
+		LogColor("[DEBUG] " + msg, CYAN);
 	}
 
 	static void LogInfo(const std::string& msg)
@@ -151,6 +171,31 @@ public:
 	static void LogError(const std::string& msg)
 	{
 		LogColor("[ERROR] " + msg, RED);
+	}
+
+
+	static void LogTrace(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		SetConsoleColor(RESET);
+		std::cout << "[TRACE] ";
+		std::vprintf(fmt, args);
+		std::cout << std::endl;
+		ResetConsoleColor();
+		va_end(args);
+	}
+
+	static void LogDebug(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		SetConsoleColor(CYAN);
+		std::cout << "[DEBUG] ";
+		std::vprintf(fmt, args);
+		std::cout << std::endl;
+		ResetConsoleColor();
+		va_end(args);
 	}
 
 	static void LogInfo(const char* fmt, ...)
