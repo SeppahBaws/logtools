@@ -102,6 +102,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdarg>
+#include <ctime>
 
 enum class LogLevel
 {
@@ -122,6 +123,12 @@ struct LogBinding
 #endif
 };
 
+struct LoggerSettings
+{
+	bool showDate;
+	bool showTime;
+};
+
 class Logger
 {
 public:
@@ -130,12 +137,19 @@ public:
 #if defined(LOGTOOLS_WINDOWS)
 		hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
+		m_Settings = { false, false };
 	}
 
 	static void SetLevel(LogLevel level)
 	{
 		m_LogLevel = level;
 	}
+
+	static void Configure(const LoggerSettings& settings)
+	{
+		m_Settings = settings;
+	}
+	
 
 	static void LogTrace(const std::string& msg)
 	{
@@ -210,6 +224,7 @@ private:
 			return;
 
 		SetConsoleColor(m_Bindings[static_cast<int>(level)].color);
+		PrintTime();
 		std::cout << "[" << m_Bindings[static_cast<int>(level)].identifier << "] ";
 		std::cout << msg << std::endl;
 		ResetConsoleColor();
@@ -221,10 +236,45 @@ private:
 			return;
 
 		SetConsoleColor(m_Bindings[static_cast<int>(level)].color);
+		PrintTime();
 		std::cout << "[" << m_Bindings[static_cast<int>(level)].identifier << "] ";
 		std::vprintf(fmt, args);
 		std::cout << std::endl;
 		ResetConsoleColor();
+	}
+
+	static void PrintTime()
+	{
+		if (!m_Settings.showDate && !m_Settings.showTime)
+			return;
+
+		std::time_t t = std::time(nullptr);
+		std::tm* now = std::localtime(&t);
+
+		std::printf("[");
+
+		if (m_Settings.showDate)
+		{
+			std::printf("%.4d-%.2d-%.2d",
+					now->tm_year + 1900,
+					now->tm_mon + 1,
+					now->tm_hour);
+		}
+
+		if (m_Settings.showDate && m_Settings.showTime)
+		{
+			std::printf(" ");
+		}
+
+		if (m_Settings.showTime)
+		{
+			std::printf("%.2d:%.2d:%.2d",
+					now->tm_hour,
+					now->tm_min,
+					now->tm_sec);
+		}
+
+		std::printf("] ");
 	}
 
 private:
@@ -282,6 +332,8 @@ private:
 	};
 
 	inline static LogLevel m_LogLevel = LogLevel::Trace;
+
+	inline static LoggerSettings m_Settings = { false, false };
 };
 
 #endif //INCLUDE_LOGTOOLS_H
