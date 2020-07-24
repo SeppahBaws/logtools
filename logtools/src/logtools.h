@@ -49,13 +49,22 @@
 #ifndef INCLUDE_LOGTOOLS_H
 #define INCLUDE_LOGTOOLS_H
 
+// Platform definitions
+#if defined(__linux__)
+#define LOGTOOLS_LINUX
+#elif defined(_WIN32) | defined(_WIN64)
+#define LOGTOOLS_WINDOWS
+#else
+#error Unsupported platform! Logtools only works on Linux or Windows.
+#endif
+
 // Check if C++17 or greater, by checking if we have a C++17 specific feature.
 #if __cpp_inline_variables < 201606
 #error Incorrect C++ version. Logtools requires C++ version 17 or greater.
 #endif
 
 ////////////////// Colors //////////////////
-#if defined(__linux__)
+#if defined(LOGTOOLS_LINUX)
 // Linux Colors
 
 #define BLACK      "\033[30m"
@@ -69,7 +78,7 @@
 
 #define RESET      "\033[0m"
 
-#elif defined(_WIN32) || defined(_WIN64)
+#elif defined(LOGTOOLS_WINDOWS)
 // Windows Colors
 
 #define WIN32_LEAN_AND_MEAN
@@ -91,12 +100,33 @@
 //////////////// Main Logger ////////////////
 #include <string>
 #include <iostream>
+#include <cstdio>
+#include <cstdarg>
+#include <ctime>
 
-enum LogLevel
+enum class LogLevel
 {
-	Info = 0x1,
-	Warning = 0x2,
-	Error = 0x4
+	Trace = 0,
+	Debug = 1,
+	Info = 2,
+	Warning = 3,
+	Error = 4
+};
+
+struct LogBinding
+{
+	const char* identifier;
+#if defined(LOGTOOLS_LINUX)
+	const char* color;
+#elif defined(LOGTOOLS_WINDOWS)
+	WORD color;
+#endif
+};
+
+struct LoggerSettings
+{
+	bool showDate;
+	bool showTime;
 };
 
 class Logger
@@ -104,67 +134,181 @@ class Logger
 public:
 	static void Init()
 	{
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(LOGTOOLS_WINDOWS)
 		hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
+		m_Settings = { false, false };
 	}
 
-	static void Log(LogLevel level, const std::string& msg)
+	static void SetLevel(LogLevel level)
 	{
-		switch (level)
-		{
-		case LogLevel::Info:
-			LogInfo(msg);
-			break;
+		m_LogLevel = level;
+	}
 
-		case LogLevel::Warning:
-			LogWarning(msg);
-			break;
+	static void Configure(const LoggerSettings& settings)
+	{
+		m_Settings = settings;
+	}
+	
 
-		case LogLevel::Error:
-			LogError(msg);
-			break;
-		}
+	static void LogTrace(const std::string& msg)
+	{
+		Log(LogLevel::Trace, msg);
+	}
+
+	static void LogDebug(const std::string& msg)
+	{
+		Log(LogLevel::Debug, msg);
 	}
 
 	static void LogInfo(const std::string& msg)
 	{
-		LogColor("[INFO] " + msg, WHITE);
+		Log(LogLevel::Info, msg);
 	}
 
 	static void LogWarning(const std::string& msg)
 	{
-		LogColor("[WARNING] " + msg, YELLOW);
+		Log(LogLevel::Warning, msg);
 	}
 
 	static void LogError(const std::string& msg)
 	{
-		LogColor("[ERROR] " + msg, RED);
+		Log(LogLevel::Error, msg);
+	}
+
+
+	static void LogTrace(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		Log(LogLevel::Trace, fmt, args);
+		va_end(args);
+	}
+
+	static void LogDebug(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		Log(LogLevel::Debug, fmt, args);
+		va_end(args);
+	}
+
+	static void LogInfo(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		Log(LogLevel::Info, fmt, args);
+		va_end(args);
+	}
+
+	static void LogWarning(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		Log(LogLevel::Warning, fmt, args);
+		va_end(args);
+	}
+
+	static void LogError(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		Log(LogLevel::Error, fmt, args);
+		va_end(args);
 	}
 
 private:
-#if defined(__linux__)
+	static void Log(LogLevel level, const std::string& msg)
+	{
+		if (m_LogLevel > level) // If we have the logger's log level set higher than the current level, ignore the message.
+			return;
+
+		SetConsoleColor(m_Bindings[static_cast<int>(level)].color);
+		PrintTime();
+		std::cout << "[" << m_Bindings[static_cast<int>(level)].identifier << "] ";
+		std::cout << msg << std::endl;
+		ResetConsoleColor();
+	}
+
+	static void Log(LogLevel level, const char* fmt, va_list args)
+	{
+		if (m_LogLevel > level) // If we have the logger's log level set higher than the current level, ignore the message.
+			return;
+
+		SetConsoleColor(m_Bindings[static_cast<int>(level)].color);
+		PrintTime();
+		std::cout << "[" << m_Bindings[static_cast<int>(level)].identifier << "] ";
+		std::vprintf(fmt, args);
+		std::cout << std::endl;
+		ResetConsoleColor();
+	}
+
+	static void PrintTime()
+	{
+		if (!m_Settings.showDate && !m_Settings.showTime)
+			return;
+
+		std::time_t t = std::time(nullptr);
+		std::tm* now = std::localtime(&t);
+
+		std::printf("[");
+
+		if (m_Settings.showDate)
+		{
+			std::printf("%.4d-%.2d-%.2d",
+					now->tm_year + 1900,
+					now->tm_mon + 1,
+					now->tm_hour);
+		}
+
+		if (m_Settings.showDate && m_Settings.showTime)
+		{
+			std::printf(" ");
+		}
+
+		if (m_Settings.showTime)
+		{
+			std::printf("%.2d:%.2d:%.2d",
+					now->tm_hour,
+					now->tm_min,
+					now->tm_sec);
+		}
+
+		std::printf("] ");
+	}
+
+private:
+#if defined(LOGTOOLS_LINUX)
 	// Linux specific
-	static void ResetConsoleColors()
+	static void SetConsoleColor(const std::string& color)
+	{
+		std::cout << color;
+	}
+	static void ResetConsoleColor()
 	{
 		std::cout << RESET;
 	}
 	static void LogColor(const std::string& msg, const std::string& color)
 	{
-		std::cout << color << msg << std::endl;
-		ResetConsoleColors();
+		SetConsoleColor(color);
+		std::cout << msg << std::endl;
+		ResetConsoleColor();
 	}
-#elif defined(_WIN32) || defined(_WIN64)
+#elif defined(LOGTOOLS_WINDOWS)
 	// Windows specific
-	static void ResetConsoleColors()
+	static void SetConsoleColor(const WORD color)
+	{
+		SetConsoleTextAttribute(Instance().hConsole, color);
+	}
+	static void ResetConsoleColor()
 	{
 		SetConsoleTextAttribute(Instance().hConsole, RESET);
 	}
 	static void LogColor(const std::string& msg, const WORD color)
 	{
-		SetConsoleTextAttribute(Instance().hConsole, color);
+		SetConsoleColor(color);
 		std::cout << msg << std::endl;
-		ResetConsoleColors();
+		ResetConsoleColor();
 	}
 #endif
 
@@ -175,9 +319,21 @@ private:
 	}
 
 private:
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(LOGTOOLS_WINDOWS)
 	inline static HANDLE hConsole;
 #endif
+
+	inline const static LogBinding m_Bindings[] = {
+		{ "TRACE", RESET },
+		{ "DEBUG", CYAN },
+		{ "INFO", WHITE },
+		{ "WARNING", YELLOW },
+		{ "ERROR", RED }
+	};
+
+	inline static LogLevel m_LogLevel = LogLevel::Trace;
+
+	inline static LoggerSettings m_Settings = { false, false };
 };
 
 #endif //INCLUDE_LOGTOOLS_H
