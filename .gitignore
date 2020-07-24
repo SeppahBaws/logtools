@@ -43,4 +43,4 @@ bin-int/
 *.out
 *.app
 
-!premake/*.exe
+!premake/*

@@ -1,1 +1,1 @@
-./premake/premake5 gmake2
+./premake/premake5.out gmake2
