@@ -13,9 +13,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Premake
-      run: ./premake/premake5 gmake2
+      run: sudo ./premake/premake5 gmake2
     - name: Build with make
-      run: make
+      run: sudo make
   build_windows:
     name: build on Windows
     runs-on: windows-latest
@@ -31,6 +31,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Premake
-      run: ./premake/premake5 gmake2
+      run: sudo ./premake/premake5 gmake2
     - name: Build with make
-      run: make
+      run: sudo make
