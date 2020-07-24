@@ -132,6 +132,11 @@ public:
 #endif
 	}
 
+	static void SetLevel(LogLevel level)
+	{
+		m_LogLevel = level;
+	}
+
 	static void LogTrace(const std::string& msg)
 	{
 		Log(LogLevel::Trace, msg);
@@ -201,6 +206,9 @@ public:
 private:
 	static void Log(LogLevel level, const std::string& msg)
 	{
+		if (m_LogLevel > level) // If we have the logger's log level set higher than the current level, ignore the message.
+			return;
+
 		SetConsoleColor(m_Bindings[static_cast<int>(level)].color);
 		std::cout << "[" << m_Bindings[static_cast<int>(level)].identifier << "] ";
 		std::cout << msg << std::endl;
@@ -209,6 +217,9 @@ private:
 
 	static void Log(LogLevel level, const char* fmt, va_list args)
 	{
+		if (m_LogLevel > level) // If we have the logger's log level set higher than the current level, ignore the message.
+			return;
+
 		SetConsoleColor(m_Bindings[static_cast<int>(level)].color);
 		std::cout << "[" << m_Bindings[static_cast<int>(level)].identifier << "] ";
 		std::vprintf(fmt, args);
@@ -269,6 +280,8 @@ private:
 		{ "WARNING", YELLOW },
 		{ "ERROR", RED }
 	};
+
+	inline static LogLevel m_LogLevel = LogLevel::Trace;
 };
 
 #endif //INCLUDE_LOGTOOLS_H
