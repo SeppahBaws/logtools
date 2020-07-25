@@ -13,6 +13,9 @@ bin-int/
 # Prerequisites
 *.d
 
+# MacOSX stuff
+**/.DS_Store
+
 # Compiled Object files
 *.slo
 *.lo
@@ -43,4 +46,4 @@ bin-int/
 *.out
 *.app
 
-!premake/*
+!premake/*.[exe|out|a]

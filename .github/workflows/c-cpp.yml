@@ -37,3 +37,22 @@ jobs:
       run: |
         make config=debug
         make config=release
+  build_macosx:
+    name: build on MacOSX
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    # We have to make these ourselves, MacOSX doesn't auto generate sub folders
+    - name: make build folders
+      run: |
+        mkdir bin/
+        mkdir bin-int/
+    - name: Premake
+      run: |
+        chmod +x ./GenerateProject-macosx.sh
+        chmod +x ./premake/premake5.a
+        ./GenerateProject-macosx.sh
+    - name: Build with make
+      run: |
+        make config=debug
+        make config=release

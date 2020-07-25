@@ -54,8 +54,10 @@
 #define LOGTOOLS_LINUX
 #elif defined(_WIN32) | defined(_WIN64)
 #define LOGTOOLS_WINDOWS
+#elif defined(__APPLE__)
+#define LOGTOOLS_APPLE
 #else
-#error Unsupported platform! Logtools only works on Linux or Windows.
+#error Unsupported platform! Logtools only works on Linux, Windows or MacOSX.
 #endif
 
 // Check if C++17 or greater, by checking if we have a C++17 specific feature.
@@ -64,7 +66,7 @@
 #endif
 
 ////////////////// Colors //////////////////
-#if defined(LOGTOOLS_LINUX)
+#if defined(LOGTOOLS_LINUX) || defined(LOGTOOLS_APPLE)
 // Linux Colors
 
 #define BLACK      "\033[30m"
@@ -116,7 +118,7 @@ enum class LogLevel
 struct LogBinding
 {
 	const char* identifier;
-#if defined(LOGTOOLS_LINUX)
+#if defined(LOGTOOLS_LINUX) || defined(LOGTOOLS_APPLE)
 	const char* color;
 #elif defined(LOGTOOLS_WINDOWS)
 	WORD color;
@@ -278,8 +280,8 @@ private:
 	}
 
 private:
-#if defined(LOGTOOLS_LINUX)
-	// Linux specific
+#if defined(LOGTOOLS_LINUX) || defined(LOGTOOLS_APPLE)
+	// Linux/Apple specific
 	static void SetConsoleColor(const std::string& color)
 	{
 		std::cout << color;
