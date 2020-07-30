@@ -248,17 +248,23 @@ private:
 		if (!m_Settings.showDate && !m_Settings.showTime)
 			return;
 
-		std::time_t t = std::time(nullptr);
-		std::tm* now = std::localtime(&t);
+		time_t t = time(nullptr);
+		std::tm now{};
+
+#if defined(LOGTOOLS_WINDOWS)
+		localtime_s(&now, &t);
+#elif defined(LOGTOOLS_LINUX)
+		localtime_r(&t, &now);
+#endif
 
 		std::printf("[");
 
 		if (m_Settings.showDate)
 		{
 			std::printf("%.4d-%.2d-%.2d",
-					now->tm_year + 1900,
-					now->tm_mon + 1,
-					now->tm_hour);
+					now.tm_year + 1900,
+					now.tm_mon + 1,
+					now.tm_hour);
 		}
 
 		if (m_Settings.showDate && m_Settings.showTime)
@@ -269,9 +275,9 @@ private:
 		if (m_Settings.showTime)
 		{
 			std::printf("%.2d:%.2d:%.2d",
-					now->tm_hour,
-					now->tm_min,
-					now->tm_sec);
+					now.tm_hour,
+					now.tm_min,
+					now.tm_sec);
 		}
 
 		std::printf("] ");
