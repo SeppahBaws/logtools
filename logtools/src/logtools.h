@@ -1,5 +1,5 @@
 /*
- * LogTools // v1.1 // small and simple cross-platform logging toolset.
+ * LogTools // v1.2 // small and simple cross-platform logging toolset.
  * ************   https://github.com/SeppahBaws/logtools   ************
  *
  * -----------------------------[   LICENSE   ]-----------------------------
