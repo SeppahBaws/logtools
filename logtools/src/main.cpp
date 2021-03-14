@@ -1,10 +1,9 @@
 #include "logtools.h"
 #include <iostream>
-#include <ctime>
 
 int main()
 {
-	Logger::Init(); // Very important!
+	Logger::Init(true, "output.log", false); // Very important!
 
 	Logger::Configure({ true, true });
 

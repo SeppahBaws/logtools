@@ -99,10 +99,14 @@
 
 //////////////// Main Logger ////////////////
 #include <string>
+#include <sstream>
 #include <iostream>
+#include <iomanip>
+#include <fstream>
 #include <cstdio>
 #include <cstdarg>
 #include <ctime>
+#include <vector>
 
 enum class LogLevel
 {
@@ -125,19 +129,31 @@ struct LogBinding
 
 struct LoggerSettings
 {
-	bool showDate;
-	bool showTime;
+	bool showDate = false;
+	bool showTime = false;
 };
 
 class Logger
 {
 public:
-	static void Init()
+	static void Init(bool logToFile = false, const std::string& filePath = "", bool append = false)
 	{
 #if defined(LOGTOOLS_WINDOWS)
 		hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
 		m_Settings = { false, false };
+
+		if (logToFile && !filePath.empty())
+		{
+			if (append)
+			{
+				m_LogFile.open(filePath, std::fstream::out | std::fstream::ate | std::fstream::app);
+			}
+			else
+			{
+				m_LogFile.open(filePath, std::fstream::out | std::fstream::ate);
+			}
+		}
 	}
 
 	static void SetLevel(LogLevel level)
@@ -149,7 +165,7 @@ public:
 	{
 		m_Settings = settings;
 	}
-	
+
 
 	static void LogTrace(const std::string& msg)
 	{
@@ -224,9 +240,19 @@ private:
 			return;
 
 		SetConsoleColor(m_Bindings[static_cast<int>(level)].color);
-		PrintTime();
-		std::cout << "[" << m_Bindings[static_cast<int>(level)].identifier << "] ";
-		std::cout << msg << std::endl;
+
+		std::stringstream ss;
+		ss << PrintTime();
+		ss << "[" << m_Bindings[static_cast<int>(level)].identifier << "] ";
+		ss << msg << std::endl;
+		std::cout << ss.str();
+
+		if (m_LogFile && m_LogFile.is_open())
+		{
+			m_LogFile << ss.str();
+			m_LogFile.flush();
+		}
+
 		ResetConsoleColor();
 	}
 
@@ -236,17 +262,30 @@ private:
 			return;
 
 		SetConsoleColor(m_Bindings[static_cast<int>(level)].color);
-		PrintTime();
-		std::cout << "[" << m_Bindings[static_cast<int>(level)].identifier << "] ";
-		std::vprintf(fmt, args);
-		std::cout << std::endl;
+
+		std::stringstream ss;
+		ss << PrintTime();
+		ss << "[" << m_Bindings[static_cast<int>(level)].identifier << "] ";
+
+		std::vector<char> buf(1 + std::vsnprintf(nullptr, 0, fmt, args));
+		std::vsnprintf(buf.data(), buf.size(), fmt, args);
+		ss << buf.data() << std::endl;
+
+		std::cout << ss.str();
+
+		if (m_LogFile && m_LogFile.is_open())
+		{
+			m_LogFile << ss.str();
+			m_LogFile.flush();
+		}
+
 		ResetConsoleColor();
 	}
 
-	static void PrintTime()
+	static std::string PrintTime()
 	{
 		if (!m_Settings.showDate && !m_Settings.showTime)
-			return;
+			return "";
 
 		time_t t = time(nullptr);
 		std::tm now{};
@@ -257,30 +296,30 @@ private:
 		localtime_r(&t, &now);
 #endif
 
-		std::printf("[");
+		std::stringstream ss;
+		ss << "[";
 
 		if (m_Settings.showDate)
 		{
-			std::printf("%.4d-%.2d-%.2d",
-					now.tm_year + 1900,
-					now.tm_mon + 1,
-					now.tm_hour);
+			ss << std::setw(4) << now.tm_year + 1900 << "-";
+			ss << std::setw(2) << std::setfill('0') << now.tm_mon + 1 << "-";
+			ss << std::setw(2) << std::setfill('0') << now.tm_hour;
 		}
 
 		if (m_Settings.showDate && m_Settings.showTime)
 		{
-			std::printf(" ");
+			ss << " ";
 		}
 
 		if (m_Settings.showTime)
 		{
-			std::printf("%.2d:%.2d:%.2d",
-					now.tm_hour,
-					now.tm_min,
-					now.tm_sec);
+			ss << std::setw(2) << std::setfill('0') << now.tm_hour << ":";
+			ss << std::setw(2) << std::setfill('0') << now.tm_min << ":";
+			ss << std::setw(2) << std::setfill('0') << now.tm_sec;
 		}
 
-		std::printf("] ");
+		ss << "] ";
+		return ss.str();
 	}
 
 private:
@@ -340,6 +379,7 @@ private:
 	inline static LogLevel m_LogLevel = LogLevel::Trace;
 
 	inline static LoggerSettings m_Settings = { false, false };
+	inline static std::fstream m_LogFile;
 };
 
 #endif //INCLUDE_LOGTOOLS_H
