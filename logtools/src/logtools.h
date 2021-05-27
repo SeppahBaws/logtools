@@ -1,5 +1,5 @@
 /*
- * LogTools // v1.1 // small and simple cross-platform logging toolset.
+ * LogTools // v1.1.2 // small and simple cross-platform logging toolset.
  * ************   https://github.com/SeppahBaws/logtools   ************
  *
  * -----------------------------[   LICENSE   ]-----------------------------
@@ -303,7 +303,7 @@ private:
 		{
 			ss << std::setw(4) << now.tm_year + 1900 << "-";
 			ss << std::setw(2) << std::setfill('0') << now.tm_mon + 1 << "-";
-			ss << std::setw(2) << std::setfill('0') << now.tm_hour;
+			ss << std::setw(2) << std::setfill('0') << now.tm_mday;
 		}
 
 		if (m_Settings.showDate && m_Settings.showTime)
