@@ -264,7 +264,7 @@ private:
 			std::printf("%.4d-%.2d-%.2d",
 					now.tm_year + 1900,
 					now.tm_mon + 1,
-					now.tm_hour);
+					now.tm_mday);
 		}
 
 		if (m_Settings.showDate && m_Settings.showTime)
