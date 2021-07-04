@@ -267,8 +267,11 @@ private:
 		ss << PrintTime();
 		ss << "[" << m_Bindings[static_cast<int>(level)].identifier << "] ";
 
+		va_list args2;
+		va_copy(args2, args);
 		std::vector<char> buf(1 + std::vsnprintf(nullptr, 0, fmt, args));
-		std::vsnprintf(buf.data(), buf.size(), fmt, args);
+		std::vsnprintf(buf.data(), buf.size(), fmt, args2);
+		va_end(args2);
 		ss << buf.data() << std::endl;
 
 		std::cout << ss.str();
