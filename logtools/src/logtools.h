@@ -156,6 +156,11 @@ public:
 		}
 	}
 
+	static void Shutdown()
+	{
+		m_LogFile.close();
+	}
+
 	static void SetLevel(LogLevel level)
 	{
 		m_LogLevel = level;

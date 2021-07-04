@@ -45,4 +45,6 @@ int main()
 	Logger::Configure({ false, false });
 
 	Logger::LogTrace("Hello World!");
+
+	Logger::Shutdown(); // Very important!
 }
