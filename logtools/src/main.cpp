@@ -1,10 +1,9 @@
 #include "logtools.h"
 #include <iostream>
-#include <ctime>
 
 int main()
 {
-	Logger::Init(); // Very important!
+	Logger::Init(true, "output.log", false); // Very important!
 
 	Logger::Configure({ true, true });
 
@@ -46,4 +45,6 @@ int main()
 	Logger::Configure({ false, false });
 
 	Logger::LogTrace("Hello World!");
+
+	Logger::Shutdown(); // Very important!
 }
